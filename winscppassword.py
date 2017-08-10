@@ -1,6 +1,10 @@
 # coding=utf-8
-import _winreg
+try:
+    import _winreg
+except:
+    import winreg as _winreg
 import random
+
 PWALG_SIMPLE = 1
 PWALG_SIMPLE_MAGIC = 0xA3
 PWALG_SIMPLE_STRING = '0123456789ABCDEF'
@@ -8,11 +12,13 @@ PWALG_SIMPLE_MAXLEN = 50
 PWALG_SIMPLE_FLAG = 0xFF
 PWALG_SIMPLE_INTERNAL = 0x00
 
+
 def simple_encrypt_char(char):
     char = ~char ^ PWALG_SIMPLE_MAGIC
     a = (char & 0xF0) >> 4
     b = (char & 0x0F) >> 0
-    return PWALG_SIMPLE_STRING[a]+PWALG_SIMPLE_STRING[b]
+    return PWALG_SIMPLE_STRING[a] + PWALG_SIMPLE_STRING[b]
+
 
 def simple_decrypt_next_char(password_list):
     if len(password_list) <= 0:
@@ -20,6 +26,7 @@ def simple_decrypt_next_char(password_list):
     a = PWALG_SIMPLE_STRING.find(password_list.pop(0))
     b = PWALG_SIMPLE_STRING.find(password_list.pop(0))
     return 0xff & ~(((a << 4) + b << 0) ^ PWALG_SIMPLE_MAGIC)
+
 
 def encrypt_password(password, key):
     """
@@ -43,6 +50,7 @@ def encrypt_password(password, key):
         result += simple_encrypt_char(random.randint(0, 256))
     return result
 
+
 def decrypt_password(password, key):
     """
     decrypt_password(encrypt_password, 'root'+'120.24.61.91')
@@ -56,7 +64,7 @@ def decrypt_password(password, key):
         length = simple_decrypt_next_char(password)
     else:
         length = flag
-    password = password[int(simple_decrypt_next_char(password))*2:]
+    password = password[int(simple_decrypt_next_char(password)) * 2:]
     result = ''
     for i in range(length):
         result += chr(simple_decrypt_next_char(password))
@@ -68,12 +76,14 @@ def decrypt_password(password, key):
             result = result[len(key):]
     return result
 
+
 def get_value(session_key, str):
     try:
         value = _winreg.QueryValueEx(session_key, str)[0]
     except Exception as e:
         value = ''
     return value
+
 
 def get_password():
     decrypt_args = []
@@ -95,9 +105,9 @@ def get_password():
 
 if __name__ == '__main__':
     for session in get_password():
-        print u"hostname: {0}\nusername: {1}\nencrypt_password: {2}\npassword: {3}\n".format(
+        print(u"hostname: {0}\nusername: {1}\nencrypt_password: {2}\npassword: {3}\n".format(
             session['hostname'],
             session['username'],
             session['password'],
-            decrypt_password(session['password'], session['username']+session['hostname']),
-        )
+            decrypt_password(session['password'], session['username'] + session['hostname']),
+        ))
